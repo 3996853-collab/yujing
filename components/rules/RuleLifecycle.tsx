@@ -179,19 +179,17 @@ export default function RuleLifecycle({
           )}
         </button>
 
-        {showSubmit && (
-          <button
-            type="button"
-            onClick={() => {
-              setSuccess(true);
-              setTimeout(() => setSuccess(false), 3000);
-            }}
-            className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-[#10b981] hover:bg-[#059669] text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95"
-          >
-            <CheckCircle className="h-4.5 w-4.5" />
-            <span>提交审核并生效</span>
-          </button>
-        )}
+        <button
+          type="button"
+          onClick={() => {
+            setSuccess(true);
+            setTimeout(() => setSuccess(false), 3000);
+          }}
+          className={`inline-flex items-center gap-1.5 px-5 py-2.5 ${completed ? 'bg-[#10b981] hover:bg-[#059669]' : 'bg-gray-800 hover:bg-gray-700'} text-white rounded-xl text-xs font-bold transition-all shadow-md active:scale-95`}
+        >
+          <CheckCircle className="h-4.5 w-4.5" />
+          <span>{completed ? '提交审核并生效' : '跳过回测，直接提交生效'}</span>
+        </button>
       </div>
 
       {completed && (

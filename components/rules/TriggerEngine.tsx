@@ -15,9 +15,15 @@ export interface ComputeCondition {
   id: string;
   type: 'static' | 'formula' | 'timeseries';
   metric: string;
+  leftMathOp?: string;
+  leftMathValue?: string;
   formula: string;
   period: string;
   comparison: string;
+  rightType?: 'static' | 'metric';
+  rightMetric?: string;
+  rightMathOp?: string;
+  rightMathValue?: string;
   threshold: string;
 }
 
@@ -397,24 +403,53 @@ export default function TriggerEngine({
                   {/* Render based on Type */}
                   <div className="flex flex-wrap items-center gap-3">
                     {cond.type === 'static' && (
-                      <>
-                        <span className="text-xs text-gray-500 font-semibold">指标:</span>
-                        <div className="w-[200px]">
+                      <div className="flex flex-wrap items-center gap-2">
+                        {/* 左侧变量 */}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] text-gray-500 font-semibold">左侧变量:</span>
                           <select
                             value={cond.metric}
                             onChange={(e) => editComputeCondition(cond.id, { metric: e.target.value })}
-                            className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
+                            className="w-[160px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
                           >
                             {metrics.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                           </select>
                         </div>
 
-                        <span className="text-xs text-gray-500 font-semibold">条件:</span>
-                        <div className="w-[120px]">
+                        {/* 左侧运算 */}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] text-gray-500 font-semibold">运算(选填):</span>
+                          <div className="flex items-center gap-1">
+                            <select
+                              value={cond.leftMathOp || ''}
+                              onChange={(e) => editComputeCondition(cond.id, { leftMathOp: e.target.value })}
+                              className="w-[50px] bg-white border border-gray-200 rounded-lg px-1 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 text-center"
+                            >
+                              <option value="">无</option>
+                              <option value="+">+</option>
+                              <option value="-">-</option>
+                              <option value="*">*</option>
+                              <option value="/">/</option>
+                            </select>
+                            {cond.leftMathOp && (
+                              <input
+                                type="number"
+                                value={cond.leftMathValue || ''}
+                                placeholder="值"
+                                onChange={(e) => editComputeCondition(cond.id, { leftMathValue: e.target.value })}
+                                className="w-[60px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-800 outline-none focus:border-indigo-500"
+                              />
+                            )}
+                          </div>
+                        </div>
+
+                        {/* 逻辑条件 */}
+                        <div className="flex flex-col gap-1">
+                          <span className="text-[10px] text-gray-500 font-semibold">判断条件:</span>
                           <select
                             value={cond.comparison}
                             onChange={(e) => editComputeCondition(cond.id, { comparison: e.target.value })}
-                            className="w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
+                            className="w-[100px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
                           >
                             {operators.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </select>
@@ -422,19 +457,78 @@ export default function TriggerEngine({
 
                         {!['is_null', 'is_not_null'].includes(cond.comparison) && (
                           <>
-                            <span className="text-xs text-gray-500 font-semibold">阈值:</span>
-                            <div className="w-[120px]">
-                              <input
-                                type="text"
-                                value={cond.threshold}
-                                placeholder="如: 10"
-                                onChange={(e) => editComputeCondition(cond.id, { threshold: e.target.value })}
-                                className="w-full bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-800 outline-none focus:border-indigo-500 font-bold"
-                              />
+                            {/* 右侧参照量 */}
+                            <div className="flex flex-col gap-1">
+                              <span className="text-[10px] text-gray-500 font-semibold">参照量:</span>
+                              <div className="flex items-center gap-1 bg-gray-50 border border-gray-200 p-0.5 rounded-lg">
+                                <button
+                                  type="button"
+                                  onClick={() => editComputeCondition(cond.id, { rightType: 'static' })}
+                                  className={`px-2 py-1 rounded text-[10px] font-bold ${(!cond.rightType || cond.rightType === 'static') ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500'}`}
+                                >
+                                  常量
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => editComputeCondition(cond.id, { rightType: 'metric' })}
+                                  className={`px-2 py-1 rounded text-[10px] font-bold ${cond.rightType === 'metric' ? 'bg-white shadow-sm text-indigo-600' : 'text-gray-500'}`}
+                                >
+                                  变量
+                                </button>
+                              </div>
                             </div>
+                            
+                            <div className="flex flex-col gap-1 mt-[18px]">
+                              {cond.rightType === 'metric' ? (
+                                <select
+                                  value={cond.rightMetric || ''}
+                                  onChange={(e) => editComputeCondition(cond.id, { rightMetric: e.target.value })}
+                                  className="w-[160px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
+                                >
+                                  <option value="">选择指标...</option>
+                                  {metrics.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
+                                </select>
+                              ) : (
+                                <input
+                                  type="text"
+                                  value={cond.threshold}
+                                  placeholder="如: 10"
+                                  onChange={(e) => editComputeCondition(cond.id, { threshold: e.target.value })}
+                                  className="w-[100px] bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-800 outline-none focus:border-indigo-500 font-bold"
+                                />
+                              )}
+                            </div>
+
+                            {/* 右侧运算 */}
+                            {cond.rightType === 'metric' && (
+                              <div className="flex flex-col gap-1 mt-[18px]">
+                                <div className="flex items-center gap-1">
+                                  <select
+                                    value={cond.rightMathOp || ''}
+                                    onChange={(e) => editComputeCondition(cond.id, { rightMathOp: e.target.value })}
+                                    className="w-[50px] bg-white border border-gray-200 rounded-lg px-1 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 text-center"
+                                  >
+                                    <option value="">无</option>
+                                    <option value="+">+</option>
+                                    <option value="-">-</option>
+                                    <option value="*">*</option>
+                                    <option value="/">/</option>
+                                  </select>
+                                  {cond.rightMathOp && (
+                                    <input
+                                      type="text"
+                                      value={cond.rightMathValue || ''}
+                                      placeholder="如: 1.3"
+                                      onChange={(e) => editComputeCondition(cond.id, { rightMathValue: e.target.value })}
+                                      className="w-[60px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-800 outline-none focus:border-indigo-500"
+                                    />
+                                  )}
+                                </div>
+                              </div>
+                            )}
                           </>
                         )}
-                      </>
+                      </div>
                     )}
 
                     {cond.type === 'formula' && (

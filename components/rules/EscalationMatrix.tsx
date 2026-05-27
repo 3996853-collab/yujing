@@ -9,21 +9,19 @@ export interface LevelConfig {
   threshold: number;
   notifyRole: string;
   notifyChannel: string;
+  notifyPhoneNumbers?: string;
   notifyFrequencyType: 'fixed' | 'interval';
   notifyFrequencyValue: string;
+  groupByDimensions: string[];
 }
 
 interface EscalationMatrixProps {
-  groupByDimensions: string[];
-  setGroupByDimensions: (val: string[]) => void;
   levelConfigs: Record<number, LevelConfig>;
   setLevelConfigs: React.Dispatch<React.SetStateAction<Record<number, LevelConfig>>>;
   selectedTable: TableMapping | null;
 }
 
 export default function EscalationMatrix({
-  groupByDimensions,
-  setGroupByDimensions,
   levelConfigs,
   setLevelConfigs,
   selectedTable,
@@ -39,14 +37,15 @@ export default function EscalationMatrix({
     label: `${f.label} (${f.name})`
   }));
 
-  const isAggregated = groupByDimensions.length > 0;
 
   const activeConfig = levelConfigs[activeTab] || {
     threshold: 1,
     notifyRole: '仓库经理',
-    notifyChannel: '钉钉群机器人',
+    notifyChannel: '钉钉工作通知',
+    notifyPhoneNumbers: '',
     notifyFrequencyType: 'interval',
-    notifyFrequencyValue: '30'
+    notifyFrequencyValue: '30',
+    groupByDimensions: []
   };
 
   const updateActiveConfig = (fields: Partial<LevelConfig>) => {
@@ -66,107 +65,9 @@ export default function EscalationMatrix({
         <span>聚合策略与分发路由矩阵 (Aggregation & Distribution)</span>
       </h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left column: Aggregation selection */}
+      <div className="grid grid-cols-1 gap-6">
+        {/* Level Switch Tab Bar */}
         <div className="space-y-4">
-          <div>
-            <label className="block text-xs font-bold text-gray-700 mb-2 flex items-center gap-1">
-              <span>1. 聚合维度选择 (GroupBy Dimensions)</span>
-              <span className="cursor-help" title="选择预警汇总维度。不聚合会逐单生成预警，适合核心高危异常件。">
-                <HelpCircle className="h-3.5 w-3.5 text-gray-400" />
-              </span>
-            </label>
-            
-            <div className="space-y-3">
-              {/* Option A: No Aggregation */}
-              <div 
-                onClick={() => setGroupByDimensions([])}
-                className={`p-3.5 border rounded-xl cursor-pointer transition-all flex items-start gap-3 ${
-                  !isAggregated 
-                    ? 'border-indigo-600 bg-indigo-50/40 shadow-sm' 
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <input 
-                  type="radio"
-                  name="aggregationType"
-                  checked={!isAggregated}
-                  onChange={() => setGroupByDimensions([])}
-                  className="mt-0.5 rounded-full text-indigo-600 focus:ring-0"
-                />
-                <div>
-                  <span className="text-xs font-bold text-gray-800 block">不聚合</span>
-                  <span className="text-[10px] text-gray-500">逐单明细推送，实时高频发出，适合极高危件</span>
-                </div>
-              </div>
-
-              {/* Option B: Aggregation */}
-              <div 
-                onClick={() => {
-                  if (!isAggregated && dimensions.length > 0) {
-                    setGroupByDimensions([dimensions[0].value]);
-                  }
-                }}
-                className={`p-3.5 border rounded-xl cursor-pointer transition-all flex items-start gap-3 ${
-                  isAggregated 
-                    ? 'border-indigo-600 bg-indigo-50/40 shadow-sm' 
-                    : 'border-gray-200 hover:bg-gray-50'
-                }`}
-              >
-                <input 
-                  type="radio"
-                  name="aggregationType"
-                  checked={isAggregated}
-                  onChange={() => {
-                    if (!isAggregated && dimensions.length > 0) {
-                      setGroupByDimensions([dimensions[0].value]);
-                    }
-                  }}
-                  className="mt-0.5 rounded-full text-indigo-600 focus:ring-0"
-                />
-                <div className="flex-1 space-y-2">
-                  <div>
-                    <span className="text-xs font-bold text-gray-800 block">维度汇总聚合</span>
-                    <span className="text-[10px] text-gray-500">按照选定字段多维汇聚计算，适用于控制塔看板与通知推送</span>
-                  </div>
-                  
-                  {isAggregated && (
-                    <div onClick={(e) => e.stopPropagation()} className="space-y-2">
-                      <span className="text-[10px] text-gray-400 font-bold block mb-1">选择聚合维度 (多选):</span>
-                      <div className="grid grid-cols-1 gap-2 bg-gray-50 p-2.5 rounded-xl border border-gray-200 max-h-40 overflow-y-auto">
-                        {dimensions.map(d => {
-                          const isChecked = groupByDimensions.includes(d.value);
-                          return (
-                            <label key={d.value} className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-700 hover:text-indigo-600 py-0.5">
-                              <input
-                                type="checkbox"
-                                checked={isChecked}
-                                onChange={() => {
-                                  if (isChecked) {
-                                    setGroupByDimensions(groupByDimensions.filter(item => item !== d.value));
-                                  } else {
-                                    setGroupByDimensions([...groupByDimensions, d.value]);
-                                  }
-                                }}
-                                className="rounded text-indigo-600 focus:ring-0"
-                              />
-                              <span>{d.label}</span>
-                            </label>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Right column: 3-Level config selector & Settings */}
-        <div className="space-y-4 border-l border-gray-100 pl-0 md:pl-6">
-          {/* Level Switch Tab Bar */}
-          <div>
             <span className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-2">预警分级选择与配置:</span>
             <div className="flex bg-gray-100 p-1 rounded-xl border border-gray-200">
               {[1, 2, 3].map(lvl => (
@@ -205,8 +106,97 @@ export default function EscalationMatrix({
             )}
 
             {activeConfig.enabled ? (
-              <>
-                {/* Threshold config */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Left Side: Aggregation Config */}
+                <div className="space-y-4">
+                  <label className="block text-xs font-bold text-gray-700 flex items-center gap-1">
+                    <span>{activeTab} 级聚合维度配置</span>
+                  </label>
+                  
+                  <div className="space-y-3">
+                    <div 
+                      onClick={() => updateActiveConfig({ groupByDimensions: [] })}
+                      className={`p-3.5 border rounded-xl cursor-pointer transition-all flex items-start gap-3 ${
+                        activeConfig.groupByDimensions.length === 0 
+                          ? 'border-indigo-600 bg-indigo-50/40 shadow-sm' 
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input 
+                        type="radio"
+                        checked={activeConfig.groupByDimensions.length === 0}
+                        onChange={() => updateActiveConfig({ groupByDimensions: [] })}
+                        className="mt-0.5 rounded-full text-indigo-600 focus:ring-0"
+                      />
+                      <div>
+                        <span className="text-xs font-bold text-gray-800 block">不聚合 (逐单明细)</span>
+                        <span className="text-[10px] text-gray-500">适合高危异常件的精准推送</span>
+                      </div>
+                    </div>
+
+                    <div 
+                      onClick={() => {
+                        if (activeConfig.groupByDimensions.length === 0 && dimensions.length > 0) {
+                          updateActiveConfig({ groupByDimensions: [dimensions[0].value] });
+                        }
+                      }}
+                      className={`p-3.5 border rounded-xl cursor-pointer transition-all flex items-start gap-3 ${
+                        activeConfig.groupByDimensions.length > 0 
+                          ? 'border-indigo-600 bg-indigo-50/40 shadow-sm' 
+                          : 'border-gray-200 hover:bg-gray-50'
+                      }`}
+                    >
+                      <input 
+                        type="radio"
+                        checked={activeConfig.groupByDimensions.length > 0}
+                        onChange={() => {
+                          if (activeConfig.groupByDimensions.length === 0 && dimensions.length > 0) {
+                            updateActiveConfig({ groupByDimensions: [dimensions[0].value] });
+                          }
+                        }}
+                        className="mt-0.5 rounded-full text-indigo-600 focus:ring-0"
+                      />
+                      <div className="flex-1 space-y-2">
+                        <div>
+                          <span className="text-xs font-bold text-gray-800 block">维度汇总聚合</span>
+                          <span className="text-[10px] text-gray-500">按照选定字段多维汇聚计算</span>
+                        </div>
+                        
+                        {activeConfig.groupByDimensions.length > 0 && (
+                          <div onClick={(e) => e.stopPropagation()} className="space-y-2">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-gray-50 p-2.5 rounded-xl border border-gray-200 max-h-40 overflow-y-auto">
+                              {dimensions.map(d => {
+                                const isChecked = activeConfig.groupByDimensions.includes(d.value);
+                                return (
+                                  <label key={d.value} className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-gray-700 hover:text-indigo-600 py-0.5">
+                                    <input
+                                      type="checkbox"
+                                      checked={isChecked}
+                                      onChange={() => {
+                                        let newDims = [...activeConfig.groupByDimensions];
+                                        if (isChecked) {
+                                          newDims = newDims.filter(item => item !== d.value);
+                                        } else {
+                                          newDims.push(d.value);
+                                        }
+                                        updateActiveConfig({ groupByDimensions: newDims });
+                                      }}
+                                      className="rounded text-indigo-600 focus:ring-0"
+                                    />
+                                    <span className="truncate">{d.label}</span>
+                                  </label>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Side: Action Config */}
+                <div className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1">
                     <span>{activeTab} 级触发阈值门槛 (Trigger Threshold)</span>
@@ -253,11 +243,25 @@ export default function EscalationMatrix({
                         className="border border-gray-200 bg-white rounded-lg p-2 text-xs text-gray-700 focus:border-indigo-500 outline-none font-semibold"
                       >
                         <option value="钉钉群机器人">钉钉群机器人 (Ding Robot)</option>
+                        <option value="钉钉工作通知">钉钉工作通知 (DingTalk Notice)</option>
                         <option value="邮件通知">邮件通知 (Email)</option>
                         <option value="短信通知">短信通知 (SMS)</option>
-                        <option value="自动分配工单">自动分配工单 (Work Order)</option>
                       </select>
                     </div>
+
+                    {/* Phone Number Input for DingTalk Work Notice */}
+                    {activeConfig.notifyChannel === '钉钉工作通知' && (
+                      <div className="flex flex-col gap-1 col-span-2 mt-1">
+                        <span className="text-[10px] text-gray-400 font-bold">通知接收人员手机号 (多个用逗号分隔)</span>
+                        <input
+                          type="text"
+                          value={activeConfig.notifyPhoneNumbers || ''}
+                          onChange={(e) => updateActiveConfig({ notifyPhoneNumbers: e.target.value })}
+                          placeholder="例如: 13800138000, 13900139000"
+                          className="border border-gray-200 bg-white rounded-lg p-2 text-xs text-gray-700 focus:border-indigo-500 outline-none font-semibold"
+                        />
+                      </div>
+                    )}
 
                     {/* Notification Frequency */}
                     <div className="flex flex-col gap-1 col-span-2 mt-1">
@@ -314,7 +318,8 @@ export default function EscalationMatrix({
                     </div>
                   </div>
                 </div>
-              </>
+              </div>
+            </div>
             ) : (
               <div className="py-8 text-center text-xs font-bold text-gray-400 space-y-2">
                 <p>⚠️ {activeTab} 级预警配置已禁用</p>
@@ -324,6 +329,5 @@ export default function EscalationMatrix({
           </div>
         </div>
       </div>
-    </div>
   );
 }

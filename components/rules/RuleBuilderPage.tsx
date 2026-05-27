@@ -43,21 +43,20 @@ export default function RuleBuilderPage() {
     { id: 'cc-2', type: 'static', metric: 'latest_delivery_time', formula: '', period: '7', comparison: 'lte', threshold: '1' }
   ]);
 
-  // Aggregation Strategy states - supports multiple dimensions
-  const [groupByDimensions, setGroupByDimensions] = useState<string[]>([]);
-
   // 3-Level Configs
   const [levelConfigs, setLevelConfigs] = useState<Record<number, {
     enabled: boolean;
     threshold: number;
     notifyRole: string;
     notifyChannel: string;
+    notifyPhoneNumbers?: string;
     notifyFrequencyType: 'fixed' | 'interval';
     notifyFrequencyValue: string;
+    groupByDimensions: string[];
   }>>({
-    1: { enabled: true, threshold: 1, notifyRole: '仓库经理', notifyChannel: '钉钉群机器人', notifyFrequencyType: 'interval', notifyFrequencyValue: '30' },
-    2: { enabled: true, threshold: 5, notifyRole: '运营经理', notifyChannel: '自动分配工单', notifyFrequencyType: 'interval', notifyFrequencyValue: '15' },
-    3: { enabled: true, threshold: 10, notifyRole: '高级总监', notifyChannel: '短信通知', notifyFrequencyType: 'fixed', notifyFrequencyValue: '09:00' }
+    1: { enabled: true, threshold: 1, notifyRole: '仓库经理', notifyChannel: '钉钉群机器人', notifyFrequencyType: 'interval', notifyFrequencyValue: '30', groupByDimensions: [] },
+    2: { enabled: true, threshold: 5, notifyRole: '运营经理', notifyChannel: '钉钉工作通知', notifyPhoneNumbers: '', notifyFrequencyType: 'interval', notifyFrequencyValue: '15', groupByDimensions: [] },
+    3: { enabled: true, threshold: 10, notifyRole: '高级总监', notifyChannel: '短信通知', notifyFrequencyType: 'fixed', notifyFrequencyValue: '09:00', groupByDimensions: [] }
   });
 
   // Outputs
@@ -112,7 +111,7 @@ export default function RuleBuilderPage() {
     
     // c.type === 'static'
     const isTimeMetric = c.metric.toLowerCase().includes('time') || c.metric.toLowerCase().includes('date');
-    if (isTimeMetric) {
+    if (isTimeMetric && !c.rightType) {
       if (c.comparison === 'is_null') return `${c.metric} IS NULL`;
       if (c.comparison === 'is_not_null') return `${c.metric} IS NOT NULL`;
       return `TIMESTAMPDIFF(HOUR, ${c.metric}, NOW()) ${compSymbol} ${c.threshold}`;
@@ -124,16 +123,31 @@ export default function RuleBuilderPage() {
     if (c.comparison === 'is_not_null') {
       return `${c.metric} IS NOT NULL`;
     }
+
+    let leftOperand = c.metric;
+    if (c.leftMathOp && c.leftMathValue) {
+      leftOperand = `(${c.metric} ${c.leftMathOp} ${c.leftMathValue})`;
+    }
+
+    let rightOperand = c.threshold;
+    if (c.rightType === 'metric' && c.rightMetric) {
+      rightOperand = c.rightMetric;
+      if (c.rightMathOp && c.rightMathValue) {
+        rightOperand = `(${c.rightMetric} ${c.rightMathOp} ${c.rightMathValue})`;
+      }
+    } else {
+      const isValNumeric = !isNaN(Number(c.threshold)) && c.threshold !== '';
+      rightOperand = isValNumeric ? c.threshold : `'${c.threshold}'`;
+    }
     
     if (!isAgg) {
-      const isValNumeric = !isNaN(Number(c.threshold)) && c.threshold !== '';
-      return `${c.metric} ${compSymbol} ${isValNumeric ? c.threshold : `'${c.threshold}'`}`;
+      return `${leftOperand} ${compSymbol} ${rightOperand}`;
     } else {
       let agg = 'SUM';
       if (['delay_rate', 'process_time', 'efficiency_score', 'transit_time', 'on_time_rate', 'satisfaction_score', 'delivery_time', 'weight_error_pct', 'current_temperature', 'current_humidity', 'std_duration_hub'].includes(c.metric)) {
         agg = 'AVG';
       }
-      return `${agg}(${c.metric}) ${compSymbol} ${c.threshold}`;
+      return `${agg}(${leftOperand}) ${compSymbol} ${rightOperand}`;
     }
   };
 
@@ -180,9 +194,6 @@ export default function RuleBuilderPage() {
       return;
     }
 
-    const isAggregated = groupByDimensions.length > 0;
-
-    // Mode A Metric-based Engine with 3 configuration levels
     const astWrapper = {
       type: 'MetricAggregationRule',
       ruleName,
@@ -194,32 +205,37 @@ export default function RuleBuilderPage() {
       computeOperator,
       computeConditions,
       aggregation: {
-        groupByDimensions,
         levels: {
           level1: {
             enabled: true,
             threshold: levelConfigs[1].threshold,
+            groupByDimensions: levelConfigs[1].groupByDimensions,
             notification: {
               role: levelConfigs[1].notifyRole,
               channel: levelConfigs[1].notifyChannel,
+              phoneNumbers: levelConfigs[1].notifyPhoneNumbers,
               frequency: { type: levelConfigs[1].notifyFrequencyType, value: levelConfigs[1].notifyFrequencyValue }
             }
           },
           level2: {
             enabled: levelConfigs[2].enabled,
             threshold: levelConfigs[2].enabled ? levelConfigs[2].threshold : null,
+            groupByDimensions: levelConfigs[2].enabled ? levelConfigs[2].groupByDimensions : null,
             notification: levelConfigs[2].enabled ? {
               role: levelConfigs[2].notifyRole,
               channel: levelConfigs[2].notifyChannel,
+              phoneNumbers: levelConfigs[2].notifyPhoneNumbers,
               frequency: { type: levelConfigs[2].notifyFrequencyType, value: levelConfigs[2].notifyFrequencyValue }
             } : null
           },
           level3: {
             enabled: levelConfigs[3].enabled,
             threshold: levelConfigs[3].enabled ? levelConfigs[3].threshold : null,
+            groupByDimensions: levelConfigs[3].enabled ? levelConfigs[3].groupByDimensions : null,
             notification: levelConfigs[3].enabled ? {
               role: levelConfigs[3].notifyRole,
               channel: levelConfigs[3].notifyChannel,
+              phoneNumbers: levelConfigs[3].notifyPhoneNumbers,
               frequency: { type: levelConfigs[3].notifyFrequencyType, value: levelConfigs[3].notifyFrequencyValue }
             } : null
           }
@@ -228,12 +244,9 @@ export default function RuleBuilderPage() {
     };
     setAstJson(JSON.stringify(astWrapper, null, 2));
 
-    // Construct SQL Query
-    let sql = `SELECT ${!isAggregated ? '*' : `${groupByDimensions.join(', ')}, COUNT(1) as total_count`} FROM ${activeTable}`;
+    let sql = `SELECT * FROM ${activeTable}`;
     const whereClauses: string[] = [];
-    const havingClauses: string[] = [];
 
-    // Step 1: WHERE Filter Clause
     if (!skipScope && scopeFilters.length > 0) {
       const filters = scopeFilters.map(f => {
         const compSymbol = getCompSymbol(f.comparison);
@@ -246,35 +259,13 @@ export default function RuleBuilderPage() {
       whereClauses.push(`(${filters.join(` ${scopeOperator} `)})`);
     }
 
-    // Step 2: Conditions Clause (Mapped to WHERE or HAVING depending on aggregation)
-    const condSqls = computeConditions.map(c => compileCondition(c, isAggregated)).filter(Boolean);
+    const condSqls = computeConditions.map(c => compileCondition(c, false)).filter(Boolean);
     if (condSqls.length > 0) {
-      const condString = `(${condSqls.join(` ${computeOperator} `)})`;
-      if (!isAggregated) {
-        whereClauses.push(condString);
-      } else {
-        havingClauses.push(condString);
-      }
+      whereClauses.push(`(${condSqls.join(` ${computeOperator} `)})`);
     }
 
     if (whereClauses.length > 0) {
       sql += `\nWHERE ${whereClauses.join(' AND ')}`;
-    }
-
-    if (isAggregated) {
-      sql += `\nGROUP BY ${groupByDimensions.join(', ')}`;
-      
-      // Enforce check across enabled levels
-      const levelHavings = [1, 2, 3]
-        .filter(lvl => lvl === 1 || levelConfigs[lvl].enabled)
-        .map(lvl => {
-          return `COUNT(1) >= ${levelConfigs[lvl].threshold} /* Level ${lvl}: ${levelConfigs[lvl].notifyRole} via ${levelConfigs[lvl].notifyChannel} */`;
-        });
-      havingClauses.push(`(${levelHavings.join(' OR ')})`);
-      
-      if (havingClauses.length > 0) {
-        sql += `\nHAVING ${havingClauses.join(` ${computeOperator} `)}`;
-      }
     }
 
     setPseudoSql(sql);
@@ -282,12 +273,10 @@ export default function RuleBuilderPage() {
   }, [
     engineMode, ruleName, businessLine, preEvent, postEvent, timeWindow,
     skipScope, scopeOperator, scopeFilters, computeOperator, computeConditions, 
-    groupByDimensions, levelConfigs, selectedTable
+    levelConfigs, selectedTable
   ]);
 
-  // Scope Filter Action Handlers
   const addScopeFilter = () => {
-    // Pick first dimension from selectedTable, or default
     const defaultDim = selectedTable?.fields.filter(f => f.role === 'Dimension' || f.role === 'Attribute')[0]?.name || 'warehouse_name';
     setScopeFilters(prev => [
       ...prev,
@@ -303,7 +292,6 @@ export default function RuleBuilderPage() {
     setScopeFilters(prev => prev.map(f => f.id === id ? { ...f, ...fields } : f));
   };
 
-  // Compute Condition Action Handlers
   const addComputeCondition = () => {
     const defaultMetric = selectedTable?.fields.filter(f => f.role === 'Metric')[0]?.name || 'order_count';
     setComputeConditions(prev => [
@@ -320,7 +308,6 @@ export default function RuleBuilderPage() {
     setComputeConditions(prev => prev.map(c => c.id === id ? { ...c, ...fields } : c));
   };
 
-  // AI Prompt Parsing Simulation
   const handleAiParse = () => {
     if (!aiPrompt.trim()) return;
     setIsAiParsing(true);
@@ -354,7 +341,6 @@ export default function RuleBuilderPage() {
           { id: 'cc-1', type: 'static', metric: 'receive_time', formula: '', period: '7', comparison: 'is_null', threshold: '' },
           { id: 'cc-2', type: 'static', metric: 'latest_delivery_time', formula: '', period: '7', comparison: 'lte', threshold: '1' }
         ]);
-        setGroupByDimensions([]);
         setRuleName('上海仓出库揽收即将超时预警');
         setBusinessLine('冷链仓配');
         setWarningLevel('RED');
@@ -369,7 +355,6 @@ export default function RuleBuilderPage() {
           { id: 'cc-2', type: 'static', metric: 'sign_time', formula: '', period: '7', comparison: 'is_null', threshold: '' },
           { id: 'cc-3', type: 'static', metric: 'update_time', formula: '', period: '7', comparison: 'gte', threshold: '48' }
         ]);
-        setGroupByDimensions([]);
         setRuleName('全部已发出快递疑似遗失预警');
         setBusinessLine('冷链仓配');
         setWarningLevel('ORANGE');
@@ -382,8 +367,7 @@ export default function RuleBuilderPage() {
         setComputeConditions([
           { id: 'cc-1', type: 'timeseries', metric: 'delay_rate', formula: '', period: '7', comparison: 'gt', threshold: '10' }
         ]);
-        setGroupByDimensions(['warehouse_name']);
-        setLevelConfigs(prev => ({ ...prev, 1: { ...prev[1], threshold: 5 } }));
+        setLevelConfigs(prev => ({ ...prev, 1: { ...prev[1], threshold: 5, groupByDimensions: ['warehouse_name'] } }));
         setRuleName('上海分拨中心延误率均值超标预警');
         setBusinessLine('冷链仓配');
         setWarningLevel('YELLOW');
@@ -533,8 +517,6 @@ export default function RuleBuilderPage() {
 
           {/* Block 2.5: Aggregation & Distribution Strategy */}
           <EscalationMatrix 
-            groupByDimensions={groupByDimensions}
-            setGroupByDimensions={setGroupByDimensions}
             levelConfigs={levelConfigs}
             setLevelConfigs={setLevelConfigs}
             selectedTable={selectedTable}
