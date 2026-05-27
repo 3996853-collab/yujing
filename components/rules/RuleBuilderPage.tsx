@@ -23,7 +23,7 @@ export default function RuleBuilderPage() {
 
   // Engine mode state
   const [engineMode, setEngineMode] = useState<'A' | 'B'>('A');
-  const [showDebugger, setShowDebugger] = useState(true);
+  const [showDebugger, setShowDebugger] = useState(false);
 
   // Mode B: Event sequence parameters
   const [preEvent, setPreEvent] = useState('ORDER_CREATED');

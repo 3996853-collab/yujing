@@ -410,7 +410,7 @@ export default function TriggerEngine({
                           <select
                             value={cond.metric}
                             onChange={(e) => editComputeCondition(cond.id, { metric: e.target.value })}
-                            className="w-[160px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
+                            className="w-[240px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
                           >
                             {metrics.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
                           </select>
@@ -449,7 +449,7 @@ export default function TriggerEngine({
                           <select
                             value={cond.comparison}
                             onChange={(e) => editComputeCondition(cond.id, { comparison: e.target.value })}
-                            className="w-[100px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
+                            className="w-[140px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
                           >
                             {operators.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                           </select>
@@ -483,7 +483,7 @@ export default function TriggerEngine({
                                 <select
                                   value={cond.rightMetric || ''}
                                   onChange={(e) => editComputeCondition(cond.id, { rightMetric: e.target.value })}
-                                  className="w-[160px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
+                                  className="w-[240px] bg-white border border-gray-200 rounded-lg px-2 py-1.5 text-xs text-gray-700 outline-none focus:border-indigo-500 font-semibold"
                                 >
                                   <option value="">选择指标...</option>
                                   {metrics.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
@@ -494,7 +494,7 @@ export default function TriggerEngine({
                                   value={cond.threshold}
                                   placeholder="如: 10"
                                   onChange={(e) => editComputeCondition(cond.id, { threshold: e.target.value })}
-                                  className="w-[100px] bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-800 outline-none focus:border-indigo-500 font-bold"
+                                  className="w-[140px] bg-white border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-800 outline-none focus:border-indigo-500 font-bold"
                                 />
                               )}
                             </div>
@@ -546,7 +546,7 @@ export default function TriggerEngine({
                           </div>
 
                           <span className="text-xs text-gray-500 font-semibold font-sans">条件:</span>
-                          <div className="w-[120px]">
+                          <div className="w-[140px]">
                             <select
                               value={cond.comparison}
                               onChange={(e) => editComputeCondition(cond.id, { comparison: e.target.value })}

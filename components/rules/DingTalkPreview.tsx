@@ -121,26 +121,28 @@ export default function DingTalkPreview({ type }: DingTalkPreviewProps) {
       </div>
 
       {/* Bottom Input Area */}
-      <div className="bg-[#f7f7f7] border-t border-gray-200 flex flex-col pb-6">
-        <div className="px-4 py-2 flex items-center gap-2">
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
-            <span className="text-orange-400">📢</span> 群公告
+      {isGroup && (
+        <div className="bg-[#f7f7f7] border-t border-gray-200 flex flex-col pb-6">
+          <div className="px-4 py-2 flex items-center gap-2">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
+              <span className="text-orange-400">📢</span> 群公告
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
+              <span className="text-green-500">➕</span> 群助手
+            </div>
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
+              <span className="text-blue-400">❄️</span> 更多
+            </div>
           </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
-            <span className="text-green-500">➕</span> 群助手
-          </div>
-          <div className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-gray-200 rounded-full text-xs text-gray-600">
-            <span className="text-blue-400">❄️</span> 更多
+          <div className="px-3 pb-2 pt-1 flex items-center gap-3">
+            <Mic className="w-7 h-7 text-gray-600 p-1 border border-gray-400 rounded-full" />
+            <div className="flex-1 bg-white h-9 rounded-md border border-gray-300" />
+            <ThumbsUp className="w-6 h-6 text-gray-600" />
+            <Smile className="w-6 h-6 text-gray-600" />
+            <Plus className="w-7 h-7 text-gray-600 p-0.5 border border-gray-400 rounded-full" />
           </div>
         </div>
-        <div className="px-3 pb-2 pt-1 flex items-center gap-3">
-          <Mic className="w-7 h-7 text-gray-600 p-1 border border-gray-400 rounded-full" />
-          <div className="flex-1 bg-white h-9 rounded-md border border-gray-300" />
-          <ThumbsUp className="w-6 h-6 text-gray-600" />
-          <Smile className="w-6 h-6 text-gray-600" />
-          <Plus className="w-7 h-7 text-gray-600 p-0.5 border border-gray-400 rounded-full" />
-        </div>
-      </div>
+      )}
     </div>
   );
 }
