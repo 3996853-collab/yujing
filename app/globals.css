@@ -1,0 +1,113 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary-glow: rgba(99, 102, 241, 0.08);
+  --color-alert-orange: #f97316;
+  --color-alert-red: #ef4444;
+  --color-alert-black: #1f2937;
+  --color-brand-indigo: #6366f1;
+  --color-brand-emerald: #10b981;
+  --color-brand-blue: #3b82f6;
+  --color-dark-bg: #090f1d;
+  --color-dark-card: rgba(18, 25, 45, 0.85);
+  --color-dark-border: rgba(75, 85, 99, 0.25);
+}
+
+:root {
+  --background: #090f1d;
+  --foreground: #f3f4f6;
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #090f1d;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Custom styles for React Flow */
+.react-flow__renderer {
+  background-color: #090f1d !important;
+}
+
+.react-flow__handle {
+  width: 8px !important;
+  height: 8px !important;
+  border: 2px solid #090f1d !important;
+  border-radius: 50% !important;
+}
+
+.react-flow__handle-top, .react-flow__handle-bottom {
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.react-flow__edge-path {
+  stroke-dasharray: 4;
+  animation: dash 40s linear infinite;
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 1000;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Matte Glassmorphism Panel styles - reduced transparency noise */
+.glass-panel {
+  background: rgba(18, 25, 45, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(75, 85, 99, 0.25);
+}
+
+.glass-input {
+  background: rgba(13, 19, 35, 0.9);
+  border: 1px solid rgba(75, 85, 99, 0.3);
+  color: #f3f4f6;
+  transition: all 0.2s ease-in-out;
+}
+
+.glass-input:focus {
+  border-color: #6366f1;
+  outline: none;
+}
+
+/* Subtle Alerts Glows - restricted to borders rather than full backdrops */
+.glow-pulse-orange {
+  border-color: rgba(249, 115, 22, 0.4);
+  box-shadow: 0 0 10px rgba(249, 115, 22, 0.05);
+}
+
+.glow-pulse-red {
+  border-color: rgba(239, 68, 68, 0.4);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.05);
+}
+
+.glow-pulse-black {
+  border-color: rgba(75, 85, 99, 0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+}
