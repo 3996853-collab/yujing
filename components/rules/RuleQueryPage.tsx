@@ -1,9 +1,10 @@
+'use client';
+
 import React, { useState } from 'react';
-import { useRuleStore } from '../../store/ruleStore';
-import { Search, Filter, Edit, Plus, Box, LayoutGrid, Database, Users } from 'lucide-react';
+import { Search, Filter, Edit, Plus, Box, LayoutGrid, Database, Users, Bell, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Mock data for configured rules that match the query requirements
+// Mock data with alertCount and reachCount added
 const mockConfiguredRules = [
   {
     id: 'rule-001',
@@ -13,7 +14,9 @@ const mockConfiguredRules = [
     warehouse: '上海嘉定仓',
     cargoOwner: '李宁体育',
     status: 'active',
-    updatedAt: '2026-05-20 14:30:00'
+    updatedAt: '2026-05-20 14:30:00',
+    alertCount: 127,
+    reachCount: 124
   },
   {
     id: 'rule-002',
@@ -23,7 +26,9 @@ const mockConfiguredRules = [
     warehouse: '全国通用',
     cargoOwner: '盒马鲜生',
     status: 'active',
-    updatedAt: '2026-05-21 09:15:00'
+    updatedAt: '2026-05-21 09:15:00',
+    alertCount: 43,
+    reachCount: 43
   },
   {
     id: 'rule-003',
@@ -33,7 +38,9 @@ const mockConfiguredRules = [
     warehouse: '杭州转运中心',
     cargoOwner: '苹果中国',
     status: 'inactive',
-    updatedAt: '2026-05-22 16:45:00'
+    updatedAt: '2026-05-22 16:45:00',
+    alertCount: 8,
+    reachCount: 6
   },
   {
     id: 'rule-004',
@@ -43,7 +50,9 @@ const mockConfiguredRules = [
     warehouse: '广州花都仓',
     cargoOwner: '通用货主',
     status: 'active',
-    updatedAt: '2026-05-25 11:20:00'
+    updatedAt: '2026-05-25 11:20:00',
+    alertCount: 312,
+    reachCount: 309
   }
 ];
 
@@ -74,10 +83,7 @@ export default function RuleQueryPage() {
     setFilteredRules(mockConfiguredRules);
   };
 
-  // Mock edit action - in a real app, this would change the tab to 'builder' and load the rule
   const handleEditRule = (ruleId: string) => {
-    // You could dispatch an event or use a global layout store to switch tabs
-    // For now, we simulate an alert or state change
     const event = new CustomEvent('navigate-to-builder', { detail: { ruleId } });
     window.dispatchEvent(event);
   };
@@ -91,14 +97,14 @@ export default function RuleQueryPage() {
           <p className="text-sm text-gray-500 mt-1 font-medium">多维度检视与维护预警策略，支持按业务线、表、仓、货主交叉筛选。</p>
         </div>
         <button className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200">
-          <Plus className="h-4.5 w-4.5" />
+          <Plus className="h-4 w-4" />
           新建规则
         </button>
       </div>
 
       <div className="p-8 flex-1 overflow-auto bg-gray-50/50">
         {/* Search Panel */}
-        <div className="bg-white p-6 rounded-2xl border border-gray-150 shadow-sm mb-8">
+        <div className="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm mb-8">
           <div className="flex items-center gap-2 mb-5">
             <Filter className="h-5 w-5 text-indigo-500" />
             <h2 className="text-base font-bold text-gray-800">多维筛选条件</h2>
@@ -179,13 +185,19 @@ export default function RuleQueryPage() {
         </div>
 
         {/* Results Table */}
-        <div className="bg-white rounded-2xl border border-gray-150 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-gray-50/80 border-b border-gray-150">
-                <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">规则名称 & ID</th>
+              <tr className="bg-gray-50/80 border-b border-gray-200">
+                <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">规则名称 &amp; ID</th>
                 <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">业务线 / 表</th>
                 <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">仓 / 货主</th>
+                <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-center">
+                  <span className="flex items-center justify-center gap-1"><Bell className="h-3.5 w-3.5" /> 告警次数</span>
+                </th>
+                <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-center">
+                  <span className="flex items-center justify-center gap-1"><TrendingUp className="h-3.5 w-3.5" /> 触达次数</span>
+                </th>
                 <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">状态</th>
                 <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider">更新时间</th>
                 <th className="px-6 py-4 text-xs font-extrabold text-gray-500 uppercase tracking-wider text-right">操作</th>
@@ -217,6 +229,16 @@ export default function RuleQueryPage() {
                       <div className="text-sm text-gray-800 font-medium">{rule.warehouse}</div>
                       <div className="text-xs text-gray-500 mt-0.5">{rule.cargoOwner}</div>
                     </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-orange-50 text-orange-600 text-sm font-extrabold">
+                        {rule.alertCount.toLocaleString()}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-indigo-50 text-indigo-600 text-sm font-extrabold">
+                        {rule.reachCount.toLocaleString()}
+                      </span>
+                    </td>
                     <td className="px-6 py-4">
                       {rule.status === 'active' ? (
                         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 text-xs font-bold">
@@ -228,7 +250,7 @@ export default function RuleQueryPage() {
                         </span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-gray-500 font-medium">
+                    <td className="px-6 py-4 text-sm text-gray-500 font-medium whitespace-nowrap">
                       {rule.updatedAt}
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -243,7 +265,7 @@ export default function RuleQueryPage() {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-6 py-16 text-center text-gray-500">
+                  <td colSpan={8} className="px-6 py-16 text-center text-gray-500">
                     <Search className="h-8 w-8 text-gray-300 mx-auto mb-3" />
                     <p className="font-medium">未找到符合条件的规则</p>
                   </td>
