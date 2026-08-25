@@ -8,6 +8,7 @@ import PlatformIntroPage from './platform/PlatformIntroPage';
 import PreviewPage from './preview/PreviewPage';
 import RuleQueryPage from './rules/RuleQueryPage';
 import PdaOperationPage from './pda/PdaOperationPage';
+import WarehouseHomePage from './warehouse/WarehouseHomePage';
 
 import { 
   Inbox, 
@@ -18,11 +19,12 @@ import {
   BookOpen,
   Smartphone,
   Search,
-  Warehouse
+  Warehouse,
+  Monitor
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-type TabType = 'inbox' | 'builder' | 'semantic' | 'intro' | 'preview' | 'query' | 'pda';
+type TabType = 'inbox' | 'builder' | 'semantic' | 'intro' | 'preview' | 'query' | 'pda' | 'webhome';
 
 export default function RuleBuilderLayout() {
   const [activeTab, setActiveTab] = useState<TabType>('intro');
@@ -43,6 +45,7 @@ export default function RuleBuilderLayout() {
     { id: 'query', label: '已配置规则查询', icon: <Search className="h-4.5 w-4.5" />, desc: '规则状态与多维组合筛选' },
     { id: 'preview', label: '预警接收端预览', icon: <Smartphone className="h-4.5 w-4.5" />, desc: '移动端接收卡片效果演示' },
     { id: 'inbox', label: '管理者预警收件箱', icon: <Inbox className="h-4.5 w-4.5" />, desc: '预警聚合态势与隐性核销' },
+    { id: 'webhome', label: 'WEB 仓库首页', icon: <Monitor className="h-4.5 w-4.5" />, desc: '宽屏全景 Dashboard' },
     { id: 'pda', label: '仓库 PDA 操作端', icon: <Warehouse className="h-4.5 w-4.5" />, desc: '移动端仓库作业与异常处理' },
   ];
 
@@ -130,6 +133,8 @@ export default function RuleBuilderLayout() {
               <RuleBuilderPage />
             ) : activeTab === 'query' ? (
               <RuleQueryPage />
+            ) : activeTab === 'webhome' ? (
+              <WarehouseHomePage />
             ) : activeTab === 'pda' ? (
               <PdaOperationPage />
             ) : activeTab === 'preview' ? (

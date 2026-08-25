@@ -89,14 +89,6 @@ const logisticsExceptions: { subtype: string; items: ExceptionItem[] }[] = [
 
 const otherExceptions: { subtype: string; count: number; items: ExceptionItem[] }[] = [
   {
-    subtype: '待入库',
-    count: 14,
-    items: [
-      { id: 'EX-O-001', orderId: 'RTN-20260603-001', description: '退货包裹待入库处理', since: '09:00', severity: 'low' },
-      { id: 'EX-O-002', orderId: 'RTN-20260603-002', description: '采购到货待入库扫码', since: '10:00', severity: 'low' },
-    ]
-  },
-  {
     subtype: '待拦截',
     count: 3,
     items: [

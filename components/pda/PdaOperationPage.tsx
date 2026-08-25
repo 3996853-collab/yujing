@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, ClipboardList, AlertOctagon, BarChart2, Warehouse } from 'lucide-react';
+import { Bell, ClipboardList, AlertOctagon, BarChart2, Warehouse, ChevronDown } from 'lucide-react';
 import TodoPanel from './TodoPanel';
 import ExceptionPanel from './ExceptionPanel';
 import StatsPanel from './StatsPanel';
@@ -13,7 +13,7 @@ const UNREAD_COUNT = 3;
 type SectionKey = 'todo' | 'exception' | 'stats';
 
 const sections: { key: SectionKey; label: string; icon: React.ReactNode; badge?: number }[] = [
-  { key: 'todo', label: '待办事项', icon: <ClipboardList className="h-5 w-5" /> },
+  { key: 'todo', label: '待办事项', icon: <ClipboardList className="h-5 w-5" />, badge: 221 },
   { key: 'exception', label: '异常数据', icon: <AlertOctagon className="h-5 w-5" />, badge: 18 },
   { key: 'stats', label: '今日作业', icon: <BarChart2 className="h-5 w-5" /> },
 ];
@@ -36,8 +36,23 @@ export default function PdaOperationPage() {
           </div>
         </div>
 
-        {/* Inbox Bell */}
-        <button
+        <div className="flex items-center gap-3">
+          {/* Cargo Owner Filter */}
+          <div className="relative hidden sm:block">
+            <select
+              className="appearance-none bg-gray-100/80 border border-gray-200/50 text-xs font-bold text-gray-700 py-1.5 pl-3 pr-8 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-colors hover:bg-gray-200/80 cursor-pointer"
+              defaultValue="all"
+            >
+              <option value="all">全部货主</option>
+              <option value="apple">苹果中国</option>
+              <option value="lining">李宁体育</option>
+              <option value="hema">盒马鲜生</option>
+            </select>
+            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-500 pointer-events-none" />
+          </div>
+
+          {/* Inbox Bell */}
+          <button
           onClick={() => setInboxOpen(true)}
           className="relative p-2 hover:bg-gray-100 rounded-xl transition-colors"
           aria-label="消息收件箱"
@@ -49,6 +64,7 @@ export default function PdaOperationPage() {
             </span>
           )}
         </button>
+        </div>
       </div>
 
       {/* Section Tabs */}
